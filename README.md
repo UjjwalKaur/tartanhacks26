@@ -161,6 +161,14 @@ This makes Dedalus more reliable and testable:
 - outputs are explainable and reproducible
 - debugging is straightforward because the AI sees an explicit data schema
 
+### Visa Budget Planner Prize
+Root'd aligns with this track by extending beyond traditional budgeting apps by:
+
+- Our app acts as an intelligent budget planner by linking subscriptions, recurring bills, and everyday purchases to real-life signals like sleep, activity, and stress to explain what’s driving spending.
+
+- It surfaces personalized patterns and “risk windows” instead of generic advice, then translates them into a few simple, actionable steps the user can try next week.
+
+- It flags unusual wants-spending days so users can proactively adjust category budgets and improve both financial stability and overall wellbeing.
 ---
 
 ## What’s in this repo (high level)
