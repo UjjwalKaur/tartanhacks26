@@ -228,6 +228,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      transactions: fileData.data,
       data: {
         file: fileData.path,
         transactionCount: fileData.data.length,

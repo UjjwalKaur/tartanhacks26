@@ -2,116 +2,156 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Activity, Sparkles } from 'lucide-react';
+import { CheckCircle2, Sparkles, AlertCircle } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { Button } from '@/components/ui/Button';
-import { Slider } from '@/components/ui/Slider';
-import { useCreateCheckIn } from '@/hooks/useDashboard';
+import { Checkin } from '@/types/checkin';
 
 export const QuickCheckIn = () => {
-  const [stress, setStress] = useState(3);
-  const [energy, setEnergy] = useState(3);
-  const [note, setNote] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [textEntry, setTextEntry] = useState('');
   const [showSuccess, setShowSuccess] = useState(false);
-  const [geminiInsight, setGeminiInsight] = useState<string | null>(null);
+  const [showError, setShowError] = useState<string | null>(null);
+  const [savedCheckin, setSavedCheckin] = useState<Checkin | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const { mutate: createCheckIn, isPending } = useCreateCheckIn();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    createCheckIn(
-      { stress, energy, note: note || undefined },
-      {
-        onSuccess: (response: any) => {
-          setShowSuccess(true);
-          setNote('');
-          setStress(3);
-          setEnergy(3);
-          // Display Gemini insight if available
-          if (response.analysis) {
-            setGeminiInsight(response.analysis);
-          }
-          setTimeout(() => setShowSuccess(false), 4000);
-          setTimeout(() => setGeminiInsight(null), 6000);
-        },
+    setLoading(true);
+    setShowError(null);
+
+    try {
+      const response = await fetch('/api/checkins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date_of_checkin: date,
+          text_entry: textEntry,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to save check-in');
       }
-    );
+
+      const data = await response.json();
+      setSavedCheckin(data.checkin);
+      setShowSuccess(true);
+      setTextEntry('');
+      setDate(new Date().toISOString().split('T')[0]);
+
+      setTimeout(() => setShowSuccess(false), 5000);
+      setTimeout(() => setSavedCheckin(null), 6000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'An error occurred';
+      setShowError(message);
+      setTimeout(() => setShowError(null), 5000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <GlassCard className="p-6">
       <div className="flex items-center space-x-2 mb-4">
-        <Activity size={20} className="text-text" />
-        <h2 className="text-xl font-semibold text-text">Quick Check-In</h2>
+        <Sparkles size={20} className="text-text" />
+        <h2 className="text-xl font-semibold text-text">Wellness Check-In</h2>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <Slider
-          label="Stress Level"
-          min={1}
-          max={5}
-          value={stress}
-          onChange={(e) => setStress(Number(e.target.value))}
-        />
-
-        <Slider
-          label="Energy Level"
-          min={1}
-          max={5}
-          value={energy}
-          onChange={(e) => setEnergy(Number(e.target.value))}
-        />
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-text mb-2">
+            Date
+          </label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full px-4 py-2 rounded-xl bg-white/5 text-text placeholder-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-text"
+            required
+          />
+        </div>
 
         <div>
           <label className="block text-sm font-medium text-text mb-2">
-            Notes (optional)
+            How are you feeling today? (free text)
           </label>
           <textarea
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-            className="w-full px-4 py-2 rounded-xl glass-card text-text placeholder-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-text resize-none"
-            rows={3}
-            placeholder="How are you feeling today?"
+            value={textEntry}
+            onChange={(e) => setTextEntry(e.target.value)}
+            className="w-full px-4 py-2 rounded-xl bg-white/5 text-text placeholder-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-text resize-none"
+            rows={4}
+            placeholder="Tell us about your day, stress levels, emotions, spending decisions, or anything on your mind..."
+            minLength={10}
+            required
           />
+          <p className="text-xs text-muted mt-1">
+            Min 10 characters. AI will extract emotions, stress level, and financial patterns.
+          </p>
         </div>
 
         <Button
           type="submit"
           variant="primary"
           className="w-full"
-          disabled={isPending}
+          disabled={loading || textEntry.length < 10}
         >
-          {isPending ? 'Submitting...' : 'Submit Check-In'}
+          {loading ? 'Processing with Dedalus AI...' : 'Save Check-In'}
         </Button>
       </form>
 
-      {showSuccess && (
+      {showSuccess && savedCheckin && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          className="mt-4 p-3 rounded-xl bg-[var(--risk-low)] border border-[var(--risk-low-solid)] border-opacity-20 flex items-center space-x-2"
+          className="mt-4 p-4 rounded-xl bg-green-500/10 border border-green-500/30 space-y-3"
         >
-          <CheckCircle2 size={18} className="text-[var(--risk-low-solid)]" />
-          <span className="text-sm text-[var(--risk-low-solid)]">
-            Check-in saved successfully!
-          </span>
+          <div className="flex items-center space-x-2">
+            <CheckCircle2 size={18} className="text-green-400" />
+            <span className="text-sm font-medium text-green-400">
+              Check-in saved and analyzed!
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="text-muted mb-1">Emotions</div>
+              <div className="text-text font-semibold">
+                {savedCheckin.emotion1}
+              </div>
+              <div className="text-muted text-xs">
+                {savedCheckin.emotion2}, {savedCheckin.emotion3}
+              </div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="text-muted mb-1">Stress</div>
+              <div className="text-text font-semibold">{savedCheckin.stress}/10</div>
+            </div>
+            <div className="bg-white/5 rounded-lg p-2">
+              <div className="text-muted mb-1">Spending Pattern</div>
+              <div className="text-text font-semibold capitalize text-xs">
+                {savedCheckin.financial_flags.replace(/_/g, ' ')}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-xs text-muted italic">
+            "{savedCheckin.life_event_summary}"
+          </div>
         </motion.div>
       )}
 
-      {geminiInsight && (
+      {showError && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0 }}
-          className="mt-4 p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 space-y-2"
+          className="mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center space-x-2"
         >
-          <div className="flex items-center space-x-2">
-            <Sparkles size={18} className="text-purple-400" />
-            <span className="text-sm font-semibold text-purple-300">AI Insight</span>
-          </div>
-          <p className="text-sm text-text/90 leading-relaxed">{geminiInsight}</p>
+          <AlertCircle size={18} className="text-red-400" />
+          <span className="text-sm text-red-400">{showError}</span>
         </motion.div>
       )}
     </GlassCard>

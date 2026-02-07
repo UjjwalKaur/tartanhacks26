@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, CheckCircle2, RefreshCw } from 'lucide-react';
+import { X, Upload, CheckCircle2, RefreshCw, TrendingUp } from 'lucide-react';
 import { Domain } from '@/types/schemas';
 import { DOMAIN_CONFIG } from '@/lib/domainConfig';
 import { Button } from '@/components/ui/Button';
@@ -10,13 +10,100 @@ import { GlassCard } from '@/components/ui/GlassCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useSpendingAnalysis } from '@/hooks/useSpendingAnalysis';
 import { SpendingAnalysisDisplay } from '@/components/mosaic/SpendingAnalysisDisplay';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import { computeMentalHealthMetrics, type MajorLifeEvent } from '@/lib/mentalHealthMetrics';
+import { Checkin } from '@/types/checkin';
+import { Transaction } from '@/types/schemas';
 
 interface DomainDrawerProps {
   domain: Domain | null;
   isOpen: boolean;
   onClose: () => void;
 }
+
+// Life Event Bubble Cloud Component
+interface LifeEventBubbleCloudProps {
+  events: MajorLifeEvent[];
+}
+
+const LifeEventBubbleCloud: React.FC<LifeEventBubbleCloudProps> = ({ events }) => {
+  if (!events || events.length === 0) {
+    return (
+      <div className="h-72 flex items-center justify-center">
+        <p className="text-muted text-sm">No major life events to display yet</p>
+      </div>
+    );
+  }
+
+  // Normalize spend to font size (12px to 32px)
+  const maxSpend = Math.max(...events.map((e) => e.spend));
+  const minSpend = Math.min(...events.map((e) => e.spend));
+  const spendRange = maxSpend - minSpend || 1;
+
+  const getBubbleSize = (spend: number): { fontSize: number; padding: number } => {
+    const normalized = (spend - minSpend) / spendRange;
+    const fontSize = 12 + normalized * 20; // 12px to 32px
+    const padding = 8 + normalized * 12; // 8px to 20px
+    return { fontSize, padding };
+  };
+
+  // Simple grid-based layout to minimize overlapping
+  const positions: Array<{ event: MajorLifeEvent; x: number; y: number; size: ReturnType<typeof getBubbleSize> }> = [];
+  const cols = 3;
+  const rowHeight = 100;
+  const colWidth = 280 / cols;
+
+  events.forEach((event, idx) => {
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
+    const x = col * colWidth + (colWidth - 50) / 2; // Center-ish
+    const y = row * rowHeight + 20;
+    positions.push({
+      event,
+      x,
+      y,
+      size: getBubbleSize(event.spend),
+    });
+  });
+
+  return (
+    <div className="relative w-full h-72 bg-white/5 rounded-lg overflow-hidden">
+      {positions.map(({ event, x, y, size }, idx) => (
+        <motion.div
+          key={idx}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: idx * 0.05, type: 'spring', stiffness: 300 }}
+          className="absolute flex flex-col items-center justify-center rounded-full bg-gradient-to-br from-amber-500/30 to-yellow-500/20 border border-amber-500/40 hover:border-amber-500/60 transition-all cursor-pointer group"
+          style={{
+            left: `${x}px`,
+            top: `${y}px`,
+            width: `${size.padding * 6}px`,
+            height: `${size.padding * 6}px`,
+          }}
+        >
+          <div className="text-center px-2 py-1">
+            <p
+              className="text-text font-semibold leading-tight"
+              style={{ fontSize: `${size.fontSize * 0.8}px` }}
+            >
+              {event.phrase.length > 20
+                ? event.phrase.substring(0, 20) + '…'
+                : event.phrase}
+            </p>
+            <p
+              className="text-amber-400 font-bold"
+              style={{ fontSize: `${size.fontSize * 0.7}px` }}
+            >
+              ${event.spend.toFixed(0)}
+            </p>
+          </div>
+          <div className="absolute inset-0 rounded-full bg-amber-500/0 group-hover:bg-amber-500/10 transition pointer-events-none" />
+        </motion.div>
+      ))}
+    </div>
+  );
+};
 
 export const DomainDrawer = ({ domain, isOpen, onClose }: DomainDrawerProps) => {
   const { data } = useDashboard();
@@ -26,6 +113,50 @@ export const DomainDrawer = ({ domain, isOpen, onClose }: DomainDrawerProps) => 
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   
+  // Mental health state
+  const [checkins, setCheckins] = useState<Checkin[]>([]);
+  const [mentalMetrics, setMentalMetrics] = useState<any>(null);
+  const [isLoadingMentalData, setIsLoadingMentalData] = useState(false);
+  
+  // Load and compute mental health metrics
+  useEffect(() => {
+    if (domain === 'mental' && isOpen) {
+      const loadMentalData = async () => {
+        setIsLoadingMentalData(true);
+        try {
+          // Fetch checkins
+          const checkinsRes = await fetch('/api/checkins');
+          let checkinsList: Checkin[] = [];
+          if (checkinsRes.ok) {
+            const checkinsData = await checkinsRes.json();
+            checkinsList = checkinsData.checkins || [];
+            setCheckins(checkinsList);
+          }
+          
+          // Fetch transactions from spending analysis endpoint
+          const transactionsRes = await fetch('/api/analyze/spending');
+          let transactions: Transaction[] = [];
+          if (transactionsRes.ok) {
+            const spendingData = await transactionsRes.json();
+            // Extract transactions from spending analysis response
+            if (spendingData.transactions && Array.isArray(spendingData.transactions)) {
+              transactions = spendingData.transactions;
+            }
+          }
+          
+          const metrics = computeMentalHealthMetrics(checkinsList, transactions);
+          setMentalMetrics(metrics);
+        } catch (error) {
+          console.error('Failed to load mental health data:', error);
+        } finally {
+          setIsLoadingMentalData(false);
+        }
+      };
+      
+      loadMentalData();
+    }
+  }, [domain, isOpen]);
+
   if (!domain) return null;
 
   const config = DOMAIN_CONFIG[domain];
@@ -202,69 +333,137 @@ export const DomainDrawer = ({ domain, isOpen, onClose }: DomainDrawerProps) => 
                 </>
               )}
 
-              {/* Score Overview */}
-              {domainData && (
-                <GlassCard className="p-6">
-                  <h3 className="text-sm font-medium text-muted mb-2">Current Risk Score</h3>
-                  <div className="text-5xl font-bold text-text">{domainData.score}</div>
-                  <div className="mt-4">
-                    <p className="text-sm text-muted mb-2">Trend over last 7 days</p>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--stroke)" />
-                        <XAxis 
-                          dataKey="date" 
-                          tick={{ fill: 'var(--muted)', fontSize: 12 }}
-                          stroke="var(--stroke)"
-                        />
-                        <YAxis 
-                          tick={{ fill: 'var(--muted)', fontSize: 12 }}
-                          stroke="var(--stroke)"
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            background: 'var(--glass)', 
-                            border: '1px solid var(--stroke)',
-                            borderRadius: '0.5rem',
-                            backdropFilter: 'blur(var(--blur))'
-                          }}
-                        />
-                        <Line 
-                          type="monotone" 
-                          dataKey="score" 
-                          stroke="var(--text)" 
-                          strokeWidth={2}
-                          dot={{ fill: 'var(--text)', r: 4 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                </GlassCard>
-              )}
+              {/* Mental Health Insights */}
+              {domain === 'mental' && (
+                <div className="space-y-6">
+                  {isLoadingMentalData ? (
+                    <GlassCard className="p-6">
+                      <p className="text-muted">Loading mental health data...</p>
+                    </GlassCard>
+                  ) : mentalMetrics ? (
+                    <>
+                      {/* Stress vs Spending Impact */}
+                      {mentalMetrics && mentalMetrics.stressSpendingComparison && (
+                        <GlassCard className="p-6 border border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-blue-500/5">
+                          <h3 className="font-semibold text-text mb-4 flex items-center gap-2">
+                            <TrendingUp size={18} className="text-purple-600" />
+                            Stress vs Spending Impact
+                          </h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-muted mb-1">High Stress Days</p>
+                              <p className="text-2xl font-bold text-text">
+                                ${mentalMetrics.stressSpendingComparison.highStressAvgSpend.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-muted mt-1">avg spend</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted mb-1">Low Stress Days</p>
+                              <p className="text-2xl font-bold text-text">
+                                ${mentalMetrics.stressSpendingComparison.lowStressAvgSpend.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-muted mt-1">avg spend</p>
+                            </div>
+                          </div>
+                          <div className="mt-3 p-2 rounded-lg bg-white/5">
+                            <p className="text-sm font-medium text-yellow-400">
+                              {mentalMetrics.stressSpendingComparison.differencePercent > 0 
+                                ? '↑ ' + mentalMetrics.stressSpendingComparison.differencePercent.toFixed(1) + '% more'
+                                : '↓ ' + Math.abs(mentalMetrics.stressSpendingComparison.differencePercent).toFixed(1) + '% less'
+                              } spending when stressed
+                            </p>
+                          </div>
+                        </GlassCard>
+                      )}
 
-              {/* Key Drivers */}
-              {domainData && domainData.drivers.length > 0 && (
-                <div>
-                  <h3 className="text-xl font-semibold text-text mb-4">Key Drivers</h3>
-                  <div className="space-y-3">
-                    {domainData.drivers.map((driver, i) => (
-                      <GlassCard key={i} className="p-4">
-                        <p className="text-text">{driver}</p>
-                      </GlassCard>
-                    ))}
-                  </div>
+                      {/* Emotional Risk Analysis */}
+                      {mentalMetrics && mentalMetrics.emotionalRiskAnalysis && (
+                        <GlassCard className="p-6 border border-red-500/20 bg-gradient-to-br from-red-500/5 to-orange-500/5">
+                          <h3 className="font-semibold text-text mb-4">Emotional Risk Analysis</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-muted mb-1">Risk Emotions</p>
+                              <p className="text-2xl font-bold text-red-400">
+                                ${mentalMetrics.emotionalRiskAnalysis.riskEmotionDaysAvgSpend.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-muted mt-1">avg spend</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted mb-1">Other Emotions</p>
+                              <p className="text-2xl font-bold text-green-400">
+                                ${mentalMetrics.emotionalRiskAnalysis.nonRiskEmotionDaysAvgSpend.toFixed(2)}
+                              </p>
+                              <p className="text-xs text-muted mt-1">avg spend</p>
+                            </div>
+                          </div>
+                          <div className="mt-3 p-2 rounded-lg bg-white/5">
+                            <p className="text-sm font-medium text-red-400">
+                              {mentalMetrics.emotionalRiskAnalysis.differencePercent > 0 
+                                ? '↑ ' + mentalMetrics.emotionalRiskAnalysis.differencePercent.toFixed(1) + '% more'
+                                : '↓ ' + Math.abs(mentalMetrics.emotionalRiskAnalysis.differencePercent).toFixed(1) + '% less'
+                              } during vulnerable emotions
+                            </p>
+                          </div>
+                        </GlassCard>
+                      )}
+
+                      {/* Spending by Financial Flags Chart */}
+                      {mentalMetrics && mentalMetrics.spendByFinancialFlags && mentalMetrics.spendByFinancialFlags.length > 0 && (
+                        <GlassCard className="p-6 border border-cyan-500/20 bg-gradient-to-br from-cyan-500/5 to-blue-500/5">
+                          <h3 className="font-semibold text-text mb-4">Spending Patterns</h3>
+                          <div className="w-full h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={mentalMetrics.spendByFinancialFlags}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="var(--stroke)" />
+                                <XAxis 
+                                  dataKey="flag" 
+                                  tick={{ fill: 'var(--muted)', fontSize: 11 }}
+                                  angle={-45}
+                                  textAnchor="end"
+                                  height={80}
+                                />
+                                <YAxis 
+                                  tick={{ fill: 'var(--muted)', fontSize: 12 }}
+                                  stroke="var(--stroke)"
+                                />
+                                <Tooltip 
+                                  contentStyle={{ 
+                                    background: 'var(--glass)', 
+                                    border: '1px solid var(--stroke)',
+                                    borderRadius: '0.5rem'
+                                  }}
+                                  formatter={(value) => `$${(value as number).toFixed(2)}`}
+                                />
+                                <Bar dataKey="avgDiscretionarySpend" fill="#06b6d4" radius={[8, 8, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </GlassCard>
+                      )}
+
+                      {/* Top Life Event Keywords */}
+                      {mentalMetrics && mentalMetrics.topLifeEventKeywords && mentalMetrics.topLifeEventKeywords.length > 0 && (
+                        <GlassCard className="p-6 border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-yellow-500/5">
+                          <h3 className="font-semibold text-text mb-4">Major Life Events</h3>
+                          <LifeEventBubbleCloud events={mentalMetrics.majorLifeEvents || []} />
+                        </GlassCard>
+                      )}
+
+                      {checkins.length === 0 && (
+                        <GlassCard className="p-6 border border-muted/20">
+                          <p className="text-muted text-sm text-center">
+                            No check-ins yet. Start by submitting a check-in from the Daily Check-In form!
+                          </p>
+                        </GlassCard>
+                      )}
+                    </>
+                  ) : (
+                    <GlassCard className="p-6">
+                      <p className="text-muted">No mental health data available yet</p>
+                    </GlassCard>
+                  )}
                 </div>
               )}
-
-              {/* Related Insights */}
-              <div>
-                <h3 className="text-xl font-semibold text-text mb-4">Related Insights</h3>
-                <GlassCard className="p-4">
-                  <p className="text-muted text-sm">
-                    Insights related to {config.label.toLowerCase()} will appear here.
-                  </p>
-                </GlassCard>
-              </div>
             </div>
           </motion.div>
         </>
