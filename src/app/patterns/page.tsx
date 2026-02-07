@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { InsightsPanel } from '@/components/mosaic/InsightsPanel';
+import { MockDataGraphs } from '@/components/patterns/MockDataGraphs';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDashboard } from '@/hooks/useDashboard';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -39,7 +40,7 @@ export default function PatternsPage() {
             Top Patterns
           </h1>
           <p className="text-lg text-muted mt-2">
-            Discover the interconnected patterns across your wellbeing
+            Discover the interconnected mosaic of your financial health!
           </p>
         </div>
       </div>
@@ -98,44 +99,16 @@ export default function PatternsPage() {
         transition={{ delay: 0.2 }}
         className="grid grid-cols-1 md:grid-cols-3 gap-6"
       >
-        <GlassCard className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-text">Total Check-Ins</h3>
-            <TrendingUp size={20} className="text-text opacity-50" />
-          </div>
-          <p className="text-4xl font-bold text-text">
-            {data?.insights?.length || 0}
-          </p>
-          <p className="text-sm text-muted mt-2">This week</p>
-        </GlassCard>
+      </motion.div>
 
-        <GlassCard className="p-6">
-          <h3 className="font-semibold text-text mb-4">Stress Trend</h3>
-          <div className="flex items-end space-x-1 h-12">
-            {[3, 2, 4, 3, 5, 2, 4].map((val, i) => (
-              <div
-                key={i}
-                className="flex-1 bg-gradient-to-t from-red-500/50 to-red-500 rounded-t opacity-70 hover:opacity-100 transition"
-                style={{ height: `${(val / 5) * 100}%` }}
-              />
-            ))}
-          </div>
-          <p className="text-sm text-muted mt-2">Last 7 days</p>
-        </GlassCard>
-
-        <GlassCard className="p-6">
-          <h3 className="font-semibold text-text mb-4">Energy Trend</h3>
-          <div className="flex items-end space-x-1 h-12">
-            {[3, 4, 2, 3, 2, 4, 3].map((val, i) => (
-              <div
-                key={i}
-                className="flex-1 bg-gradient-to-t from-blue-500/50 to-blue-500 rounded-t opacity-70 hover:opacity-100 transition"
-                style={{ height: `${(val / 5) * 100}%` }}
-              />
-            ))}
-          </div>
-          <p className="text-sm text-muted mt-2">Last 7 days</p>
-        </GlassCard>
+      {/* Mock Data Graphs Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+      >
+        <h2 className="text-2xl font-bold text-text mb-4">Data Visualizations</h2>
+        <MockDataGraphs />
       </motion.div>
 
       {/* Recommendations */}

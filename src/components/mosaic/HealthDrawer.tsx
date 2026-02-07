@@ -98,7 +98,24 @@ export const HealthDrawer = () => {
         throw new Error('Failed to analyze fitness data');
       }
 
-      // Store file in registry
+      // SAVE FILE TO BACKEND
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('domain', 'physical');
+
+      const uploadResponse = await fetch('/api/upload/csv', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!uploadResponse.ok) {
+        const errorData = await uploadResponse.json();
+        throw new Error(errorData.error || 'Failed to upload file');
+      }
+
+      console.log('Health file uploaded successfully to backend');
+
+      // Store file in registry for UI
       setFile('physical_json', file);
       
       // Store analytics in memory

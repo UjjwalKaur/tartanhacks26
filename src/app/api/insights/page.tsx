@@ -455,18 +455,49 @@ export default function InsightsPage() {
       setError(null);
       try {
         // Load real data from uploaded files and checkins
-        const [txRes, checkinsRes] = await Promise.all([
+        const [txRes, checkinsRes, healthRes] = await Promise.all([
           fetch('/api/analyze/spending').then((r) => r.json()),
           fetch('/api/checkins').then((r) => r.json() as Promise<{ checkins: CheckinRow[] }| { error: string }>),
+          fetch('/api/analyze/health').then((r) => r.json()),
         ]);
+
+        console.log('=== DATA LOADING DEBUG ===');
+        console.log('txRes:', txRes);
+        console.log('txRes.transactions:', txRes?.transactions);
+        console.log('txRes.transactions length:', txRes?.transactions?.length);
+        console.log('healthRes:', healthRes);
+        console.log('healthRes.health_data:', healthRes?.health_data);
+        console.log('healthRes.health_data length:', healthRes?.health_data?.length);
+
+        // Check for API errors
+        if (txRes.error) {
+          console.warn('API error, trying to fall back to mock data...');
+          // Try to load mock data as fallback
+          try {
+            const mockRes = await fetch('/mock/transactions.json').then((r) => r.json());
+            if (mockRes && Array.isArray(mockRes)) {
+              console.log('Loaded mock data fallback:', mockRes.length, 'transactions');
+              txRes.transactions = mockRes;
+            } else {
+              throw new Error(`API Error: ${txRes.error} - ${txRes.message || ''}`);
+            }
+          } catch (e) {
+            throw new Error(`API Error: ${txRes.error} - ${txRes.message || ''}`);
+          }
+        }
+
+        if (!txRes.transactions) {
+          throw new Error('No transactions returned from API and no mock data available. Make sure you have uploaded a finance file.');
+        }
 
         // Handle checkins response
         const checkinsData = 'checkins' in checkinsRes ? checkinsRes.checkins : [];
         setCheckins(checkinsData);
+        console.log('Checkins loaded:', checkinsData.length);
 
         // Extract transactions from the analysis response
         let tx: TxRow[] = [];
-        if (txRes?.transactions && Array.isArray(txRes.transactions)) {
+        if (Array.isArray(txRes.transactions)) {
           tx = txRes.transactions.map((t: any) => ({
             date: t.date || new Date().toISOString().split('T')[0],
             amount: Math.abs(t.amount || 0),
@@ -474,14 +505,61 @@ export default function InsightsPage() {
             category: t.category,
             merchant: t.merchant,
           }));
+          console.log('Extracted tx array:', tx.length, 'items');
+        } else {
+          throw new Error('Transactions is not an array');
         }
 
-        // For now, use empty arrays for watch/video data (not tracking those)
-        const watch: WatchDailyRow[] = [];
-        const vids: VideoSentimentRow[] = [];
+        // Try to load health data (watch/video) from uploaded files or mock
+        let watch: WatchDailyRow[] = [];
+        let vids: VideoSentimentRow[] = [];
+
+        // First try uploaded health data
+        if (healthRes.health_data && Array.isArray(healthRes.health_data)) {
+          console.log('Using uploaded health data:', healthRes.health_data.length, 'entries');
+          watch = healthRes.health_data;
+        } else {
+          // Try to load watch data from mock as fallback
+          try {
+            const watchRes = await fetch('/mock/watch_daily.json').then((r) => r.json());
+            if (Array.isArray(watchRes)) {
+              watch = watchRes;
+              console.log('Using mock watch data:', watchRes.length, 'entries');
+            }
+          } catch (e) {
+            console.log('No watch data available (optional)');
+          }
+        }
+
+        try {
+          const videoRes = await fetch('/mock/video_sentiment.json').then((r) => r.json());
+          if (Array.isArray(videoRes)) {
+            vids = videoRes;
+            console.log('Using mock video data:', videoRes.length, 'entries');
+          }
+        } catch (e) {
+          console.log('No video data available (optional)');
+        }
 
         const daily = aggregateDaily(tx);
+        console.log('Daily aggregated:', daily.length, 'days');
+        if (daily.length === 0) {
+          throw new Error('No transactions found after aggregation. Your spending data might be empty or improperly formatted.');
+        }
+        
         const merged = mergeDaily(daily, watch, vids, checkinsData);
+        console.log('Final merged rows:', merged.length, 'days');
+        console.log('First row:', merged[0]);
+        console.log('Chart data summary:', {
+          transactions: merged.length,
+          withWatchData: merged.filter(r => r.sleep_hours != null).length,
+          withVideoData: merged.filter(r => r.video_stress != null).length,
+          withCheckinData: merged.filter(r => r.emotion_stress != null).length,
+        });
+
+        if (merged.length === 0) {
+          throw new Error('No data after aggregation. Check your transaction file.');
+        }
 
         setRows(merged);
       } catch (e: any) {
@@ -617,10 +695,35 @@ export default function InsightsPage() {
     try {
       const payload = buildAiPayload(rows, cards, anomaliesBundle.flags);
 
+      // Extract health data from rows for AI analysis
+      const healthMetrics = rows.map(r => ({
+        date: r.date,
+        sleep_hours: r.sleep_hours,
+        exercise_min: r.exercise_min,
+        resting_hr: r.resting_hr,
+        steps: r.steps,
+      })).filter(h => h.sleep_hours != null || h.exercise_min != null || h.resting_hr != null);
+
+      // Build sleep series for trend analysis
+      const sleepSeries = rows
+        .filter(r => r.sleep_hours != null)
+        .map(r => ({ date: r.date, value: r.sleep_hours! }));
+
+      const stepsSeries = rows
+        .filter(r => r.steps != null)
+        .map(r => ({ date: r.date, value: r.steps! }));
+
+      const healthData = healthMetrics.length > 0 ? {
+        sleepSeries,
+        stepsSeries,
+        recentData: healthMetrics.slice(-7),
+      } : null;
+
       console.log('=== SENDING TO AI SUMMARY ===');
       console.log('Checkins count:', checkins.length);
       console.log('Checkins data:', checkins.slice(0, 2));
       console.log('Cards (insights) count:', cards.length);
+      console.log('Health data metrics:', healthMetrics.length);
 
       const res = await fetch(SUMMARY_API, {
         method: 'POST',
@@ -628,7 +731,7 @@ export default function InsightsPage() {
         body: JSON.stringify({
           insights: cards,
           transactions: null,
-          health: null,
+          health: healthData,
           checkins: checkins,
         }),
       });
@@ -692,8 +795,10 @@ export default function InsightsPage() {
           <h2 className="text-2xl font-bold text-text">Unable to Load Insights</h2>
           <p className="text-muted">{error ?? 'Unknown error'}</p>
           <p className="text-xs text-muted">
-            Make sure your JSON files are in <span className="text-text">/public/mock</span> and named exactly:
-            transactions.json, watch_daily.json, video_sentiment.json
+            The error above should tell you what's wrong. Check that:<br/>
+            1. You have uploaded a finance file in the Finance drawer<br/>
+            2. The <span className="text-text">/api/analyze/spending</span> endpoint is working<br/>
+            3. Check browser console for debug logs (DATA LOADING DEBUG section)
           </p>
         </GlassCard>
       </div>

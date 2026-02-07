@@ -80,7 +80,7 @@ export const MosaicTile = ({ domain, onClick, index }: MosaicTileProps) => {
         <div className="flex items-end justify-between">
           <div>
             <div className="text-4xl font-bold text-text">{domain.score}</div>
-            <div className="text-sm text-muted">Risk Score</div>
+            <div className="text-sm text-muted">Step</div>
           </div>
           <Badge variant={getBadgeVariant()}>{riskLabel}</Badge>
         </div>

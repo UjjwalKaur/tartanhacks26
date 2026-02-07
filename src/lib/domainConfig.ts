@@ -70,19 +70,19 @@ export const MOSAIC_LAYOUT: MosaicLayoutItem[] = [
 ];
 
 export const getRiskColor = (score: number): string => {
-  if (score >= 70) return 'var(--risk-low)';
-  if (score >= 40) return 'var(--risk-med)';
+  if (score <= 1) return 'var(--risk-low)';
+  if (score <= 2) return 'var(--risk-med)';
   return 'var(--risk-high)';
 };
 
 export const getRiskSolidColor = (score: number): string => {
-  if (score >= 70) return 'var(--risk-low-solid)';
-  if (score >= 40) return 'var(--risk-med-solid)';
+  if (score <= 1) return 'var(--risk-low-solid)';
+  if (score <= 2) return 'var(--risk-med-solid)';
   return 'var(--risk-high-solid)';
 };
 
 export const getRiskLabel = (score: number): string => {
-  if (score >= 70) return 'Healthy';
-  if (score >= 40) return 'Moderate';
+  if (score <= 1) return 'Healthy';
+  if (score <= 2) return 'Moderate';
   return 'At Risk';
 };

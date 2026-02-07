@@ -195,8 +195,11 @@ Format your response as JSON with these exact keys:
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('[/api/analyze/spending] GET request received');
+    
     // Fetch latest uploaded transaction file
     const fileData = await getLatestTransactionFile();
+    console.log('[/api/analyze/spending] getLatestTransactionFile result:', fileData ? `Found ${fileData.data.length} transactions` : 'No file found');
 
     if (!fileData) {
       return NextResponse.json(

@@ -136,8 +136,8 @@ export const MosaicGrid = ({
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-3xl font-bold text-text">💪 Physical Fitness</h2>
-                    <p className="text-muted">Upload and analyze your fitness data</p>
+                    <h2 className="text-3xl font-bold text-text">Physical Fitness</h2>
+                    <p className="text-muted">Upload and analyze data from your Apple Watch or fitness tracking apps to uncover hidden insights</p>
                   </div>
                   <button
                     onClick={handleCloseDrawer}

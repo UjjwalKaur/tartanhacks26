@@ -9,32 +9,28 @@ export const mockDashboardData: DashboardPayload = {
   domains: [
     {
       domain: 'finance',
-      score: 68,
+      score: 1,
       trend: 'down',
       drivers: [
-        'Increased discretionary spending',
-        'Lower savings rate this month',
-        'Upcoming rent payment',
+        'Summary of your transactions'
       ],
     },
     {
       domain: 'mental',
-      score: 45,
+      score: 2,
       trend: 'down',
       drivers: [
-        'High stress levels reported',
-        'Irregular sleep schedule',
-        'Low energy in check-ins',
+        'Summary of how your emotions affect spending',
+        'Beat the impulse buying by targetting the root cause',
       ],
     },
     {
       domain: 'physical',
-      score: 72,
+      score: 3,
       trend: 'up',
       drivers: [
-        'Consistent step count',
-        'Improved sleep duration',
-        'Regular exercise routine',
+        'Poor sleep leads to poor decision making and impulse buying',
+        'Regular exercise improves mood and reduces stress spending',
       ],
     },
   ],

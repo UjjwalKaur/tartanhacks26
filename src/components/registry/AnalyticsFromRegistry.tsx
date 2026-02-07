@@ -33,11 +33,6 @@ export const AnalyticsFromRegistry = () => {
         const data = JSON.parse(text);
         const transactions = data.transactions || [];
 
-        if (!Array.isArray(transactions) || transactions.length === 0) {
-          setError('Invalid transaction data format');
-          return;
-        }
-
         const spendingAnalytics = analyzeSpending(
           transactions,
           data.startDate,

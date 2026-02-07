@@ -52,14 +52,14 @@ export default function LandingPage() {
         <div className="flex items-center justify-center gap-2 mb-4">
           <Sparkles size={24} className="text-text" />
           <span className="text-sm font-semibold text-muted uppercase tracking-wide">
-            Your Life Mosaic
+            ROOT'D
           </span>
         </div>
         <h1 className="text-6xl lg:text-7xl font-bold text-text tracking-tight">
-          Understand Your Life's
+          Root'd,
           <br />
-          <span className="bg-gradient-to-r from-amber-200 via-amber-100 to-amber-200 bg-clip-text text-transparent">
-            Interconnected Patterns
+          <span className="text-2xl font-semibold text-emerald-600/800">
+            A holistic view on financial planning
           </span>
         </h1>
         <p className="text-xl text-muted max-w-2xl mx-auto">

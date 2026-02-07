@@ -14,6 +14,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { computeMentalHealthMetrics, type MajorLifeEvent } from '@/lib/mentalHealthMetrics';
 import { Checkin } from '@/types/checkin';
 import { Transaction } from '@/types/schemas';
+import { StressSpendingCorrelation } from '@/components/mental-health/StressSpendingCorrelation';
 
 interface DomainDrawerProps {
   domain: Domain | null;
@@ -115,6 +116,7 @@ export const DomainDrawer = ({ domain, isOpen, onClose }: DomainDrawerProps) => 
   
   // Mental health state
   const [checkins, setCheckins] = useState<Checkin[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [mentalMetrics, setMentalMetrics] = useState<any>(null);
   const [isLoadingMentalData, setIsLoadingMentalData] = useState(false);
   
@@ -135,16 +137,17 @@ export const DomainDrawer = ({ domain, isOpen, onClose }: DomainDrawerProps) => 
           
           // Fetch transactions from spending analysis endpoint
           const transactionsRes = await fetch('/api/analyze/spending');
-          let transactions: Transaction[] = [];
+          let transactionsList: Transaction[] = [];
           if (transactionsRes.ok) {
             const spendingData = await transactionsRes.json();
             // Extract transactions from spending analysis response
             if (spendingData.transactions && Array.isArray(spendingData.transactions)) {
-              transactions = spendingData.transactions;
+              transactionsList = spendingData.transactions;
+              setTransactions(transactionsList);
             }
           }
           
-          const metrics = computeMentalHealthMetrics(checkinsList, transactions);
+          const metrics = computeMentalHealthMetrics(checkinsList, transactionsList);
           setMentalMetrics(metrics);
         } catch (error) {
           console.error('Failed to load mental health data:', error);
@@ -441,11 +444,14 @@ export const DomainDrawer = ({ domain, isOpen, onClose }: DomainDrawerProps) => 
                         </GlassCard>
                       )}
 
-                      {/* Top Life Event Keywords */}
-                      {mentalMetrics && mentalMetrics.topLifeEventKeywords && mentalMetrics.topLifeEventKeywords.length > 0 && (
+                      {/* Stress vs Spending Correlation Chart */}
+                      <StressSpendingCorrelation checkins={checkins} transactions={transactions} />
+
+                      {/* Top Life Event Keywords / Emotions - Fallback if no events */}
+                      {mentalMetrics && mentalMetrics.majorLifeEvents?.length > 0 && (
                         <GlassCard className="p-6 border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-yellow-500/5">
                           <h3 className="font-semibold text-text mb-4">Major Life Events</h3>
-                          <LifeEventBubbleCloud events={mentalMetrics.majorLifeEvents || []} />
+                          <LifeEventBubbleCloud events={mentalMetrics.majorLifeEvents} />
                         </GlassCard>
                       )}
 

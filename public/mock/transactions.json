@@ -1,0 +1,110 @@
+[
+  { "transaction_id":"tx_0001","date":"2026-01-08","name":"WHOLE FOODS","merchant":"Whole Foods","amount":52.47,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0002","date":"2026-01-08","name":"STARBUCKS","merchant":"Starbucks","amount":5.82,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0003","date":"2026-01-08","name":"UBER TRIP","merchant":"Uber","amount":11.95,"currency":"USD","category":"Transport","group":"Needs","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0004","date":"2026-01-09","name":"SHELL OIL","merchant":"Shell","amount":29.11,"currency":"USD","category":"Gas","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0005","date":"2026-01-09","name":"CHIPOTLE","merchant":"Chipotle","amount":13.74,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0006","date":"2026-01-09","name":"AMZN MKTPLACE","merchant":"Amazon","amount":18.26,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0007","date":"2026-01-10","name":"UBER EATS","merchant":"Uber Eats","amount":27.91,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0008","date":"2026-01-10","name":"LOCAL LIQUOR","merchant":"Local Liquor","amount":19.85,"currency":"USD","category":"Alcohol","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0009","date":"2026-01-10","name":"TARGET","merchant":"Target","amount":41.53,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0010","date":"2026-01-11","name":"DOORDASH","merchant":"DoorDash","amount":28.44,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0011","date":"2026-01-11","name":"STARBUCKS","merchant":"Starbucks","amount":6.19,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0012","date":"2026-01-11","name":"WALGREENS","merchant":"Walgreens","amount":16.22,"currency":"USD","category":"Pharmacy","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0013","date":"2026-01-12","name":"PAYROLL ACME INC","merchant":"Employer Payroll","amount":-650.00,"currency":"USD","category":"Income","group":"Income","payment_channel":"ach","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0014","date":"2026-01-12","name":"TRADER JOES","merchant":"Trader Joe's","amount":46.61,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0015","date":"2026-01-12","name":"SUBWAY","merchant":"Subway","amount":10.76,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0016","date":"2026-01-13","name":"SPOTIFY","merchant":"Spotify","amount":10.99,"currency":"USD","category":"Subscriptions","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0017","date":"2026-01-13","name":"SAFEWAY","merchant":"Safeway","amount":34.92,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0018","date":"2026-01-13","name":"STARBUCKS","merchant":"Starbucks","amount":5.65,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0019","date":"2026-01-14","name":"UBER TRIP","merchant":"Uber","amount":14.88,"currency":"USD","category":"Transport","group":"Needs","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0020","date":"2026-01-14","name":"PANERA BREAD","merchant":"Panera","amount":16.08,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0021","date":"2026-01-14","name":"AMZN MKTPLACE","merchant":"Amazon","amount":23.70,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0022","date":"2026-01-15","name":"AT&T WIRELESS","merchant":"AT&T","amount":72.10,"currency":"USD","category":"Phone","group":"Needs","payment_channel":"ach","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0023","date":"2026-01-15","name":"DOORDASH","merchant":"DoorDash","amount":26.18,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0024","date":"2026-01-15","name":"STARBUCKS","merchant":"Starbucks","amount":6.71,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0025","date":"2026-01-16","name":"AMZN MKTPLACE","merchant":"Amazon","amount":39.60,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0026","date":"2026-01-16","name":"CHIPOTLE","merchant":"Chipotle","amount":14.10,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0027","date":"2026-01-16","name":"STARBUCKS","merchant":"Starbucks","amount":5.44,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0028","date":"2026-01-17","name":"UBER EATS","merchant":"Uber Eats","amount":31.48,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0029","date":"2026-01-17","name":"LOCAL LIQUOR","merchant":"Local Liquor","amount":21.30,"currency":"USD","category":"Alcohol","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0030","date":"2026-01-17","name":"AMZN MKTPLACE","merchant":"Amazon","amount":28.06,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0031","date":"2026-01-18","name":"WHOLE FOODS","merchant":"Whole Foods","amount":48.72,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0032","date":"2026-01-18","name":"NETFLIX.COM","merchant":"Netflix","amount":15.49,"currency":"USD","category":"Subscriptions","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0033","date":"2026-01-18","name":"STARBUCKS","merchant":"Starbucks","amount":6.02,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0034","date":"2026-01-19","name":"TRADER JOES","merchant":"Trader Joe's","amount":41.38,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0035","date":"2026-01-19","name":"SUBWAY","merchant":"Subway","amount":11.08,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0036","date":"2026-01-20","name":"STARBUCKS","merchant":"Starbucks","amount":5.91,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0037","date":"2026-01-20","name":"AMZN MKTPLACE","merchant":"Amazon","amount":24.52,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0038","date":"2026-01-21","name":"UBER EATS","merchant":"Uber Eats","amount":25.96,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0039","date":"2026-01-21","name":"TARGET","merchant":"Target","amount":17.46,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0040","date":"2026-01-22","name":"DOORDASH","merchant":"DoorDash","amount":28.60,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0041","date":"2026-01-22","name":"STARBUCKS","merchant":"Starbucks","amount":6.68,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0042","date":"2026-01-23","name":"LOCAL LIQUOR","merchant":"Local Liquor","amount":19.42,"currency":"USD","category":"Alcohol","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0043","date":"2026-01-23","name":"AMZN MKTPLACE","merchant":"Amazon","amount":47.20,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0044","date":"2026-01-24","name":"UBER EATS","merchant":"Uber Eats","amount":33.80,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0045","date":"2026-01-24","name":"AMZN MKTPLACE","merchant":"Amazon","amount":61.14,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0046","date":"2026-01-25","name":"WHOLE FOODS","merchant":"Whole Foods","amount":52.90,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0047","date":"2026-01-25","name":"DOORDASH","merchant":"DoorDash","amount":25.70,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0048","date":"2026-01-25","name":"LOCAL LIQUOR","merchant":"Local Liquor","amount":20.90,"currency":"USD","category":"Alcohol","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0049","date":"2026-01-26","name":"PAYROLL ACME INC","merchant":"Employer Payroll","amount":-650.00,"currency":"USD","category":"Income","group":"Income","payment_channel":"ach","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0050","date":"2026-01-26","name":"TRADER JOES","merchant":"Trader Joe's","amount":43.52,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0051","date":"2026-01-26","name":"STARBUCKS","merchant":"Starbucks","amount":5.88,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0052","date":"2026-01-27","name":"PANERA BREAD","merchant":"Panera","amount":15.74,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0053","date":"2026-01-27","name":"AMZN MKTPLACE","merchant":"Amazon","amount":22.90,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0054","date":"2026-01-28","name":"TARGET","merchant":"Target","amount":25.33,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0055","date":"2026-01-28","name":"STARBUCKS","merchant":"Starbucks","amount":6.06,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0056","date":"2026-01-29","name":"DOORDASH","merchant":"DoorDash","amount":26.92,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0057","date":"2026-01-29","name":"AMZN MKTPLACE","merchant":"Amazon","amount":38.44,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0058","date":"2026-01-30","name":"UBER EATS","merchant":"Uber Eats","amount":29.65,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0059","date":"2026-01-30","name":"LOCAL LIQUOR","merchant":"Local Liquor","amount":18.12,"currency":"USD","category":"Alcohol","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0060","date":"2026-01-30","name":"AMZN MKTPLACE","merchant":"Amazon","amount":33.38,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0061","date":"2026-01-31","name":"UBER EATS","merchant":"Uber Eats","amount":32.55,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0062","date":"2026-01-31","name":"AMZN MKTPLACE","merchant":"Amazon","amount":57.84,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0063","date":"2026-02-01","name":"WHOLE FOODS","merchant":"Whole Foods","amount":50.88,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0064","date":"2026-02-01","name":"DOORDASH","merchant":"DoorDash","amount":26.82,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0065","date":"2026-02-01","name":"STARBUCKS","merchant":"Starbucks","amount":6.10,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0066","date":"2026-02-02","name":"RENT PAYMENT","merchant":"Landlord LLC","amount":980.00,"currency":"USD","category":"Rent","group":"Needs","payment_channel":"ach","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0067","date":"2026-02-02","name":"TRADER JOES","merchant":"Trader Joe's","amount":42.90,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0068","date":"2026-02-02","name":"TARGET","merchant":"Target","amount":14.18,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0069","date":"2026-02-03","name":"PANERA BREAD","merchant":"Panera","amount":14.44,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0070","date":"2026-02-03","name":"AMZN MKTPLACE","merchant":"Amazon","amount":21.72,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0071","date":"2026-02-04","name":"DOORDASH","merchant":"DoorDash","amount":26.62,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0072","date":"2026-02-04","name":"SHELL OIL","merchant":"Shell","amount":28.46,"currency":"USD","category":"Gas","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0073","date":"2026-02-05","name":"AMZN MKTPLACE","merchant":"Amazon","amount":37.95,"currency":"USD","category":"Shopping","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0074","date":"2026-02-05","name":"UBER EATS","merchant":"Uber Eats","amount":27.78,"currency":"USD","category":"Dining","group":"Wants","payment_channel":"online","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0075","date":"2026-02-06","name":"PAYROLL ACME INC","merchant":"Employer Payroll","amount":-650.00,"currency":"USD","category":"Income","group":"Income","payment_channel":"ach","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0076","date":"2026-02-06","name":"TRADER JOES","merchant":"Trader Joe's","amount":44.40,"currency":"USD","category":"Groceries","group":"Needs","payment_channel":"in_store","pending":false,"account":"checking" },
+  { "transaction_id":"tx_0077","date":"2026-02-06","name":"STARBUCKS","merchant":"Starbucks","amount":6.28,"currency":"USD","category":"Coffee","group":"Wants","payment_channel":"in_store","pending":false,"account":"checking" },
+
+  { "transaction_id":"tx_0078","date":"2026-02-06","name":"GAME DOWNLOAD","merchant":"App Store","amount":9.99,"currency":"USD","category":"Digital","group":"Wants","payment_channel":"online","pending":false,"account":"checking" }
+]
