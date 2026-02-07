@@ -131,22 +131,6 @@ Root'd disrupts this by:
 
 This is a move from reporting to coaching.
 
-### Most significant product or business model with societal impact
-The societal impact comes from scaling better decision-making.
-
-If users can reduce stress-spending, improve sleep routines, and avoid convenience spending cycles, the downstream effects include:
-- reduced financial insecurity
-- better mental wellbeing (less guilt, anxiety, and shame loops)
-- improved health habits (sleep and activity improvements)
-- stronger long-term resilience
-
-This approach can also support:
-- employers and wellness programs (optional integrations)
-- financial institutions seeking improved outcomes for customers
-- preventative health programs where financial stress is a risk factor
-
-At scale, the model helps people stabilize both finances and wellbeing.
-
 ### Award for exceptional use of MCPs, local tools, or custom Dedalus tooling
 Root'd is designed as a tool-driven pipeline rather than a “chatbot with vibes.”
 
