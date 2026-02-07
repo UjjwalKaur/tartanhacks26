@@ -215,5 +215,47 @@ If we can help people understand the causes of overspending, we can help them pr
 
 ---
 
+## Getting Started (Run Locally)
+
+### 1) Prereqs
+- Node.js (recommended: 18+ or 20+)
+- npm (comes with Node)
+
+### Check your versions:
+```bash
+node -v
+npm -v
+```
+
+### Clone the Repo
+```bash
+git clone https://github.com/UjjwalKaur/tartanhacks26.git
+cd tartanhacks26
+```
+
+### Install Dependencies
+```bash
+npm install
+```
+
+### touch .env.local
+```bash
+touch .env.local
+```
+
+### Add your API keys here
+```
+DEDALUS_API_KEY=your_key_here
+```
+
+### Run the dev server
+
+```bash
+npm run dev
+```
+
+
+
+
 ## Disclaimer
 Root'd provides informational insights and behavior suggestions. It does not provide medical advice and should not be used as a diagnostic tool.
