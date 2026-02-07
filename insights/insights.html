@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Insights: Spending vs Sleep, Watch, Video Mood</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; max-width: 1100px; }
+    .sub { color: #444; margin-top: 0; }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 14px 0 18px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px; background: #fafafa; }
+    .label { font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: .4px; }
+    .value { font-size: 20px; margin: 6px 0; }
+    .note { font-size: 12px; color: #444; margin: 0; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+    canvas { width: 100%; height: 280px; max-width: 520px; }
+    h2 { margin-top: 22px; }
+    .small { font-size: 12px; color: #666; margin-top: 6px; }
+
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+      canvas { max-width: 100%; }
+    }
+
+    /* Anomalies UI */
+    .anomWrap { margin-top: 14px; }
+    .anomList { border: 1px solid #ddd; border-radius: 10px; padding: 10px 12px; background: #fcfcfc; }
+    .anomItem { margin: 8px 0; font-size: 13px; line-height: 1.35; }
+    .pill {
+      display: inline-block;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+      background: #f5f5f5;
+      margin-right: 6px;
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
+    .pill.bad { border-color: #f2b8b8; background: #fff0f0; }
+    .pill.good { border-color: #bfe6c2; background: #effdf0; }
+    .pill.neutral { border-color: #d9d9d9; background: #f7f7f7; }
+
+    .anomGrid {
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 12px;
+      background: #fcfcfc;
+      overflow-x: auto;
+    }
+    .anomGridInner {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 18px;
+      gap: 4px;
+      align-items: end;
+    }
+    .anomCol {
+      display: grid;
+      grid-template-rows: repeat(5, 16px) 14px;
+      gap: 4px;
+      align-items: center;
+      justify-items: center;
+    }
+    .cell {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1px solid #e0e0e0;
+      background: #f2f2f2;
+    }
+    .cell.on { background: #1f77b4; border-color: #1f77b4; }   /* wants unusual */
+    .cell.on2 { background: #ff7f0e; border-color: #ff7f0e; } /* low sleep */
+    .cell.on3 { background: #2ca02c; border-color: #2ca02c; } /* low exercise */
+    .cell.on4 { background: #d62728; border-color: #d62728; } /* high resting hr */
+    .cell.on5 { background: #9467bd; border-color: #9467bd; } /* high stress */
+    .dateLab {
+      font-size: 10px;
+      color: #666;
+      transform: rotate(-45deg);
+      transform-origin: top left;
+      width: 18px;
+      height: 14px;
+      margin-top: 2px;
+    }
+    .legend {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #555;
+    }
+    .legend span { margin-right: 12px; white-space: nowrap; }
+  </style>
+</head>
+
+<body>
+  <h1>Insights Dashboard</h1>
+  <p class="sub">
+    We compare Apple Watch sleep/activity + video mood signals to spending habits.
+    These are correlations (patterns), not proof of cause and effect.
+  </p>
+
+  <div class="grid" id="cards"></div>
+
+  <div class="row">
+    <div>
+      <h2>Daily spending vs sleep and video sentiment</h2>
+      <canvas id="trend"></canvas>
+      <div class="small">Spending is daily total (excluding income). Sentiment appears only on days with a video entry.</div>
+    </div>
+    <div>
+      <h2>Spending breakdown (Needs vs Wants)</h2>
+      <canvas id="stacked"></canvas>
+      <div class="small">Wants includes dining, coffee, shopping, alcohol, subscriptions.</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <h2>Sleep today vs next-day wants spending</h2>
+      <canvas id="sleepScatter"></canvas>
+      <div class="small">Lag helps demonstrate habit links without pretending sleep “causes” spending.</div>
+    </div>
+    <div>
+      <h2>Exercise minutes vs wants spending</h2>
+      <canvas id="exScatter"></canvas>
+      <div class="small">Active days often align with more routine and lower convenience spending.</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <h2>Video stress days vs non-stress days</h2>
+      <canvas id="stressBars"></canvas>
+      <div class="small">Stress day means video stress score ≥ 6. Only uses days with videos.</div>
+    </div>
+    <div>
+      <h2>Resting HR vs wants spending</h2>
+      <canvas id="restHrScatter"></canvas>
+      <div class="small">Resting HR is a simple “strain” proxy and is often available.</div>
+    </div>
+  </div>
+
+  <!-- ========================= -->
+  <!-- ANOMALIES SECTION (NEW)   -->
+  <!-- ========================= -->
+  <div class="anomWrap">
+    <h2>Anomalies</h2>
+    <p class="small">
+      We detect unusually high/low days using a robust z-score (median + MAD). This spots out-of-pattern wants spending and
+      checks whether sleep/exercise/resting HR/video stress were also unusual around the same time.
+    </p>
+
+    <div class="row">
+      <div>
+        <h3>Wants spending anomalies timeline</h3>
+        <canvas id="anomTimeline"></canvas>
+        <div class="small">Highlighted points are unusual wants-spend days (robust |z| ≥ 2.0).</div>
+      </div>
+      <div>
+        <h3>Top anomaly days</h3>
+        <div class="anomList" id="anomList"></div>
+        <div class="small">Shows likely co-anomalies (sleep uses ±1 day window).</div>
+      </div>
+    </div>
+
+
+  </div>
+
+<script>
+  async function loadAll() {
+    const [tx, watch, vids] = await Promise.all([
+      fetch("transactions.json").then(r => r.json()),
+      fetch("watch_daily.json").then(r => r.json()),
+      fetch("video_sentiment.json").then(r => r.json()),
+    ]);
+    return { tx, watch, vids };
+  }
+
+  function mean(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+
+  function pearson(x, y) {
+    const n = Math.min(x.length, y.length);
+    if (n < 2) return 0;
+    const mx = mean(x.slice(0, n));
+    const my = mean(y.slice(0, n));
+    let num = 0, dx = 0, dy = 0;
+    for (let i = 0; i < n; i++) {
+      const a = x[i] - mx;
+      const b = y[i] - my;
+      num += a * b;
+      dx += a * a;
+      dy += b * b;
+    }
+    const den = Math.sqrt(dx * dy);
+    return den === 0 ? 0 : (num / den);
+  }
+
+  function rank(arr) {
+    const indexed = arr.map((v,i)=>({v,i})).sort((a,b)=>a.v-b.v);
+    const r = new Array(arr.length);
+    let i = 0;
+    while (i < indexed.length) {
+      let j = i;
+      while (j+1 < indexed.length && indexed[j+1].v === indexed[i].v) j++;
+      const avg = (i + j) / 2 + 1;
+      for (let k=i; k<=j; k++) r[indexed[k].i] = avg;
+      i = j + 1;
+    }
+    return r;
+  }
+
+  function spearman(x, y) { return pearson(rank(x), rank(y)); }
+
+  function formatR(r) {
+    const v = Math.round(r * 100) / 100;
+    return (v >= 0 ? "+" : "") + v.toFixed(2);
+  }
+
+  function linearFit(points) {
+    const xs = points.map(p=>p.x);
+    const ys = points.map(p=>p.y);
+    if (points.length < 2) return {m:0,b:0};
+    const mx = mean(xs), my = mean(ys);
+    let num=0, den=0;
+    for (let i=0;i<points.length;i++) {
+      num += (xs[i]-mx)*(ys[i]-my);
+      den += (xs[i]-mx)*(xs[i]-mx);
+    }
+    const m = den===0 ? 0 : num/den;
+    return { m, b: my - m*mx };
+  }
+
+  function aggregateDaily(tx) {
+    const byDate = new Map();
+    function init(date) {
+      if (!byDate.has(date)) byDate.set(date, { date, income: 0, needs: 0, wants: 0, total_spend: 0, count: 0 });
+      return byDate.get(date);
+    }
+
+    for (const t of tx) {
+      const d = init(t.date);
+      d.count += 1;
+
+      if (t.group === "Income" || t.category === "Income") {
+        d.income += Math.abs(t.amount);
+        continue;
+      }
+
+      if (t.group === "Needs") d.needs += t.amount;
+      else d.wants += t.amount;
+
+      d.total_spend += t.amount;
+    }
+    return Array.from(byDate.values()).sort((a,b)=>a.date.localeCompare(b.date));
+  }
+
+  function indexByDate(rows, key="date") {
+    const m = new Map();
+    for (const r of rows) m.set(r[key], r);
+    return m;
+  }
+
+  function mergeDaily(dailySpend, watchDaily, videoEntries) {
+    const watchMap = indexByDate(watchDaily, "date");
+    const videoMap = indexByDate(videoEntries, "date");
+
+    return dailySpend.map(d => {
+      const w = watchMap.get(d.date) || {};
+      const v = videoMap.get(d.date) || null;
+
+      return {
+        ...d,
+        sleep_hours: w.sleep_total_min ? w.sleep_total_min / 60 : null,
+        sleep_eff: w.sleep_efficiency ?? null,
+        resting_hr: w.hr_resting ?? null,
+        exercise_min: w.exercise_min ?? null,
+        steps: w.steps ?? null,
+        active_kcal: w.active_energy_kcal ?? null,
+
+        video_sentiment: v ? v.sentiment_score : null,
+        video_stress: v ? v.stress_score : null
+      };
+    });
+  }
+
+  function computeCards(rows) {
+    const totalSpend = rows.reduce((s,r)=>s+r.total_spend,0);
+    const totalWants = rows.reduce((s,r)=>s+r.wants,0);
+    const wantsShare = totalSpend > 0 ? totalWants / totalSpend : 0;
+
+    function corrOf(key) {
+      const pairs = rows.filter(r => r[key] != null).map(r => ({x:r[key], y:r.wants}));
+      return { r: spearman(pairs.map(p=>p.x), pairs.map(p=>p.y)), n: pairs.length };
+    }
+
+    const rEx = corrOf("exercise_min");
+    const rRest = corrOf("resting_hr");
+    const rSent = corrOf("video_sentiment");
+    const rStress = corrOf("video_stress");
+
+    // sleep(t) vs wants(t+1)
+    const sleepNextPairs = [];
+    for (let i = 0; i < rows.length - 1; i++) {
+      if (rows[i].sleep_hours != null) sleepNextPairs.push({ x: rows[i].sleep_hours, y: rows[i+1].wants });
+    }
+    const rSleepNext = spearman(sleepNextPairs.map(p=>p.x), sleepNextPairs.map(p=>p.y));
+
+    return [
+      { label: "Sleep → Wants (next day)", value: "r " + formatR(rSleepNext), note: "Sleep(t) vs Wants(t+1)" },
+      { label: "Exercise → Wants", value: "r " + formatR(rEx.r), note: "n=" + rEx.n + " watch days" },
+      { label: "Resting HR → Wants", value: "r " + formatR(rRest.r), note: "n=" + rRest.n + " watch days" },
+      { label: "Video stress → Wants", value: "r " + formatR(rStress.r), note: "n=" + rStress.n + " video days" },
+      { label: "Video sentiment → Wants", value: "r " + formatR(rSent.r), note: "n=" + rSent.n + " video days" },
+      { label: "Wants share of spending", value: Math.round(wantsShare*100) + "%", note: "Wants / Total (excluding income)" },
+      { label: "Total spent (period)", value: "$" + totalSpend.toFixed(2), note: "All days included" },
+      { label: "Data quality", value: "Realistic mix", note: "Weekends + bills + paydays included" }
+    ];
+  }
+
+  function renderCards(cards) {
+    const el = document.getElementById("cards");
+    el.innerHTML = "";
+    for (const c of cards) {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <div class="label">${c.label}</div>
+        <div class="value">${c.value}</div>
+        <div class="note">${c.note}</div>
+      `;
+      el.appendChild(div);
+    }
+  }
+
+  function renderTrend(rows) {
+    const labels = rows.map(r => r.date);
+    const spend = rows.map(r => r.total_spend);
+    const sleep = rows.map(r => r.sleep_hours);
+    const sent = rows.map(r => r.video_sentiment);
+
+    new Chart(document.getElementById("trend"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [
+          { label: "Total spend ($)", data: spend, tension: 0.3, yAxisID: "ySpend" },
+          { label: "Sleep (hrs)", data: sleep, tension: 0.3, yAxisID: "yOther" },
+          { label: "Video sentiment (-1..1)", data: sent, tension: 0.3, yAxisID: "yOther" }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: "nearest", axis: "x", intersect: false },
+        plugins: { tooltip: { mode: "index", intersect: false } },
+        scales: {
+          ySpend: { position: "left", title: { display: true, text: "Dollars ($)" }, beginAtZero: true },
+          yOther: { position: "right", title: { display: true, text: "Sleep / Sentiment" }, grid: { drawOnChartArea: false } }
+        }
+      }
+    });
+  }
+
+  function renderStacked(rows) {
+    const labels = rows.map(r => r.date);
+    const needs = rows.map(r => r.needs);
+    const wants = rows.map(r => r.wants);
+
+    new Chart(document.getElementById("stacked"), {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [
+          { label: "Needs ($)", data: needs, stack: "s" },
+          { label: "Wants ($)", data: wants, stack: "s" }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: { stacked: true },
+          y: { stacked: true, beginAtZero: true, title: { display: true, text: "Dollars ($)" } }
+        }
+      }
+    });
+  }
+
+  function renderSleepNext(rows) {
+    const pts = [];
+    for (let i = 0; i < rows.length - 1; i++) {
+      if (rows[i].sleep_hours != null) pts.push({ x: rows[i].sleep_hours, y: rows[i+1].wants, label: rows[i].date });
+    }
+    if (pts.length < 2) return;
+
+    const fit = linearFit(pts);
+    const xs = pts.map(p=>p.x);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const linePts = [{x:minX, y:fit.m*minX + fit.b},{x:maxX, y:fit.m*maxX + fit.b}];
+
+    new Chart(document.getElementById("sleepScatter"), {
+      type: "scatter",
+      data: { datasets: [
+        { label: "Sleep(t) vs Wants(t+1)", data: pts, pointRadius: 4 },
+        { type: "line", label: "Trend", data: linePts, pointRadius: 0, borderWidth: 2 }
+      ]},
+      options: {
+        responsive: true,
+        scales: {
+          x: { title: { display: true, text: "Sleep today (hours)" } },
+          y: { title: { display: true, text: "Next-day wants ($)" }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function renderScatter(rows, canvasId, xKey, title) {
+    const pts = rows.filter(r => r[xKey] != null).map(r => ({ x: r[xKey], y: r.wants, label: r.date }));
+    if (pts.length < 2) return;
+
+    const fit = linearFit(pts);
+    const xs = pts.map(p=>p.x);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const linePts = [{x:minX, y:fit.m*minX + fit.b},{x:maxX, y:fit.m*maxX + fit.b}];
+
+    new Chart(document.getElementById(canvasId), {
+      type: "scatter",
+      data: { datasets: [
+        { label: title, data: pts, pointRadius: 4 },
+        { type: "line", label: "Trend", data: linePts, pointRadius: 0, borderWidth: 2 }
+      ]},
+      options: {
+        responsive: true,
+        plugins: { tooltip: { callbacks: {
+          label: (ctx) => {
+            const p = ctx.raw;
+            return `${p.label}: x=${Number(p.x).toFixed(2)}, wants=$${Number(p.y).toFixed(2)}`;
+          }
+        }}},
+        scales: {
+          x: { title: { display: true, text: xKey } },
+          y: { title: { display: true, text: "Wants spending ($)" }, beginAtZero: true }
+        }
+      }
+    });
+  }
+
+  function renderVideoStressBars(rows) {
+    const withVideo = rows.filter(r => r.video_stress != null);
+    if (withVideo.length < 2) return;
+
+    const stressDays = withVideo.filter(r => r.video_stress >= 6);
+    const nonStressDays = withVideo.filter(r => r.video_stress < 6);
+
+    const avgStress = mean(stressDays.map(r => r.wants));
+    const avgNon = mean(nonStressDays.map(r => r.wants));
+
+    new Chart(document.getElementById("stressBars"), {
+      type: "bar",
+      data: { labels: ["Non-stress video days", "Stress video days"], datasets: [{ label: "Avg wants ($)", data: [avgNon, avgStress] }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true, title: { display: true, text: "Dollars ($)" } } } }
+    });
+  }
+
+  // =========================
+  // ANOMALY DETECTION
+  // =========================
+
+  function median(arr) {
+    if (!arr.length) return 0;
+    const s = [...arr].sort((a,b)=>a-b);
+    const m = Math.floor(s.length/2);
+    return s.length % 2 ? s[m] : (s[m-1]+s[m])/2;
+  }
+
+  function mad(arr, med) {
+    const dev = arr.map(v => Math.abs(v - med));
+    return median(dev);
+  }
+
+  function robustZ(value, med, madVal) {
+    if (!madVal || madVal === 0) return 0;
+    return 0.6745 * (value - med) / madVal;
+  }
+
+  function computeRobustZSeries(values) {
+    const clean = values.filter(v => v != null && !Number.isNaN(v));
+    if (clean.length < 5) return values.map(_ => 0);
+
+    const med = median(clean);
+    const madVal = mad(clean, med);
+
+    // Fallback: if MAD is 0, use standard z-score
+    if (!madVal || madVal === 0) {
+      const m = mean(clean);
+      const varr = mean(clean.map(v => (v - m) * (v - m)));
+      const sd = Math.sqrt(varr);
+      if (!sd || sd === 0) return values.map(_ => 0);
+      return values.map(v => (v == null ? null : (v - m) / sd));
+    }
+
+    return values.map(v => (v == null ? null : robustZ(v, med, madVal)));
+  }
+
+  function computeAnomalyFlags(rows) {
+    const zWants = computeRobustZSeries(rows.map(r => r.wants));
+    const zSleep = computeRobustZSeries(rows.map(r => r.sleep_hours));
+    const zEx    = computeRobustZSeries(rows.map(r => r.exercise_min));
+    const zRest  = computeRobustZSeries(rows.map(r => r.resting_hr));
+    const zStress= computeRobustZSeries(rows.map(r => r.video_stress));
+
+    // wants: "unusual" (high OR low) so grid aligns with top anomalies list
+    const wantsUnusual = zWants.map(z => z != null && Math.abs(z) >= 2.0);
+    const sleepLow     = zSleep.map(z => z != null && z <= -2.0);
+    const exLow        = zEx.map(z => z != null && z <= -2.0);
+    const restHigh     = zRest.map(z => z != null && z >= 2.0);
+    const stressHigh   = zStress.map(z => z != null && z >= 2.0);
+
+    return {
+      zWants, zSleep, zEx, zRest, zStress,
+      wantsHigh: wantsUnusual,   // keep name used by grid renderer
+      sleepLow, exLow, restHigh, stressHigh
+    };
+  }
+
+  function renderAnomalyTimeline(rows, zWants, zThresh = 2.0) {
+    const labels = rows.map(r => r.date);
+    const wants = rows.map(r => r.wants);
+
+    // highlight points directly on the line
+    const pointRadius = zWants.map(z => (z != null && Math.abs(z) >= zThresh ? 6 : 2));
+    const pointBorderWidth = zWants.map(z => (z != null && Math.abs(z) >= zThresh ? 2 : 0));
+
+    new Chart(document.getElementById("anomTimeline"), {
+      type: "line",
+      data: {
+        labels,
+        datasets: [{
+          label: "Wants ($)",
+          data: wants,
+          tension: 0.25,
+          pointRadius,
+          pointBorderWidth
+        }]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: "nearest", axis: "x", intersect: false },
+        plugins: { tooltip: { mode: "index", intersect: false } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: "Dollars ($)" } } }
+      }
+    });
+  }
+
+  function buildAnomalyGrid(rows, flags) {
+    const grid = document.getElementById("anomGrid");
+    grid.innerHTML = "";
+
+    for (let i = 0; i < rows.length; i++) {
+      const col = document.createElement("div");
+      col.className = "anomCol";
+
+      const c1 = document.createElement("div"); c1.className = "cell" + (flags.wantsHigh[i] ? " on" : "");
+      const c2 = document.createElement("div"); c2.className = "cell" + (flags.sleepLow[i] ? " on2" : "");
+      const c3 = document.createElement("div"); c3.className = "cell" + (flags.exLow[i] ? " on3" : "");
+      const c4 = document.createElement("div"); c4.className = "cell" + (flags.restHigh[i] ? " on4" : "");
+      const c5 = document.createElement("div"); c5.className = "cell" + (flags.stressHigh[i] ? " on5" : "");
+
+      const lab = document.createElement("div");
+      lab.className = "dateLab";
+      lab.textContent = rows[i].date.slice(5); // MM-DD
+
+      col.appendChild(c1);
+      col.appendChild(c2);
+      col.appendChild(c3);
+      col.appendChild(c4);
+      col.appendChild(c5);
+      col.appendChild(lab);
+
+      grid.appendChild(col);
+    }
+  }
+
+  function topKByAbsZ(zArr, k = 5) {
+    return (zArr || [])
+      .map((z, i) => ({ i, z: (z == null || Number.isNaN(z)) ? 0 : z }))
+      .sort((a, b) => Math.abs(b.z) - Math.abs(a.z))
+      .slice(0, k)
+      .map(s => s.i);
+  }
+
+  function renderTopAnomalies(rows, zWants, zSleep, zEx, zRest, zStress, zThresh = 2.0) {
+    const el = document.getElementById("anomList");
+    if (!el) return;
+    el.innerHTML = "";
+
+    const safe = (v, fallback = null) => (v == null || Number.isNaN(v) ? fallback : v);
+    const pill = (text, cls = "neutral") => `<span class="pill ${cls}">${text}</span>`;
+
+    // Prefer “true anomalies” (abs(z) >= threshold). If none, show top-K most unusual anyway.
+    const anomalyIdxs = [];
+    for (let i = 0; i < rows.length; i++) {
+      const z = safe(zWants[i], 0);
+      if (Math.abs(z) >= zThresh) anomalyIdxs.push(i);
+    }
+
+    const picked = anomalyIdxs.length
+      ? anomalyIdxs.sort((a, b) => Math.abs(safe(zWants[b], 0)) - Math.abs(safe(zWants[a], 0))).slice(0, 5)
+      : topKByAbsZ(zWants, 5);
+
+    // Sleep co-anomaly within ±1 day (low sleep)
+    function bestLowSleepNear(i) {
+      const candidates = [i - 1, i, i + 1].filter(j => j >= 0 && j < rows.length);
+      let best = null;
+      for (const j of candidates) {
+        const z = safe(zSleep[j], null);
+        if (z == null) continue;
+        if (z <= -2.0) {
+          if (!best || z < best.z) best = { j, z };
+        }
+      }
+      return best;
+    }
+
+    // If everything is flat, show a helpful message
+    const maxAbs = Math.max(...(zWants || []).map(z => Math.abs(safe(z, 0))));
+    if (maxAbs < 0.75) {
+      el.innerHTML = `
+        <div class="anomItem">
+          ${pill("No strong anomalies detected", "neutral")}
+          ${pill("Try threshold 1.5–2.0", "neutral")}
+          ${pill("Or verify wants classification", "neutral")}
+        </div>
+      `;
+      return;
+    }
+
+    for (const i of picked) {
+      const r = rows[i];
+      const wants = safe(r?.wants, 0);
+      const zw = safe(zWants[i], 0);
+
+      const isAnom = Math.abs(zw) >= zThresh;
+      const label = isAnom ? "anomaly" : "notable";
+
+      const tags = [];
+      tags.push(pill(`${label}: wants z=${zw.toFixed(2)}`, isAnom ? "bad" : "neutral"));
+      tags.push(pill(`wants=$${wants.toFixed(2)}`, zw >= 0 ? "bad" : "neutral"));
+
+      const s = bestLowSleepNear(i);
+      if (s && rows[s.j]?.sleep_hours != null) tags.push(pill(`low sleep (${rows[s.j].sleep_hours.toFixed(1)}h)`, "bad"));
+
+      const zx = safe(zEx[i], null);
+      if (zx != null && zx <= -1.75 && r.exercise_min != null) tags.push(pill(`low exercise (${r.exercise_min}m)`, "bad"));
+
+      const zr = safe(zRest[i], null);
+      if (zr != null && zr >= 1.75 && r.resting_hr != null) tags.push(pill(`high rest HR (${r.resting_hr} bpm)`, "bad"));
+
+      const zs = safe(zStress[i], null);
+      if (zs != null && zs >= 1.75 && r.video_stress != null) tags.push(pill(`high video stress (${r.video_stress})`, "bad"));
+
+      if (r.video_sentiment != null && r.video_sentiment > 0.4) tags.push(pill(`positive sentiment (${r.video_sentiment.toFixed(2)})`, "good"));
+
+      const div = document.createElement("div");
+      div.className = "anomItem";
+      div.innerHTML = `${r.date} — ${tags.join("")}`;
+      el.appendChild(div);
+    }
+  }
+
+  // =========================
+  // MAIN
+  // =========================
+  loadAll().then(({tx, watch, vids}) => {
+    const daily = aggregateDaily(tx);
+    const merged = mergeDaily(daily, watch, vids);
+
+    renderCards(computeCards(merged));
+    renderTrend(merged);
+    renderStacked(merged);
+    renderSleepNext(merged);
+    renderScatter(merged, "exScatter", "exercise_min", "Exercise vs wants");
+    renderScatter(merged, "restHrScatter", "resting_hr", "Resting HR vs wants");
+    renderVideoStressBars(merged);
+
+    // Anomalies (UPDATED thresholds + abs(z))
+    const flags = computeAnomalyFlags(merged);
+    renderAnomalyTimeline(merged, flags.zWants, 2.0);
+    renderTopAnomalies(merged, flags.zWants, flags.zSleep, flags.zEx, flags.zRest, flags.zStress, 2.0);
+    buildAnomalyGrid(merged, flags);
+  });
+</script>
+</body>
+</html>
