@@ -8,6 +8,15 @@ export interface DomainConfig {
   color: string;
 }
 
+export interface MosaicLayoutItem {
+  id: Domain;
+  label: string;
+  rowStart: number;
+  rowEnd: number;
+  colStart: number;
+  colEnd: number;
+}
+
 export const DOMAIN_CONFIG: Record<Domain, DomainConfig> = {
   finance: {
     label: 'Finance',
@@ -28,6 +37,37 @@ export const DOMAIN_CONFIG: Record<Domain, DomainConfig> = {
     color: 'rgba(80, 160, 110, 0.3)',
   },
 };
+
+// Asymmetrical mosaic layout (4x4 grid)
+// Finance: 2x2 top-left
+// Mental: 2x2 top-right
+// Physical: 2x2 bottom-center spanning
+export const MOSAIC_LAYOUT: MosaicLayoutItem[] = [
+  {
+    id: 'finance',
+    label: 'Finance',
+    rowStart: 1,
+    rowEnd: 3,
+    colStart: 1,
+    colEnd: 3,
+  },
+  {
+    id: 'mental',
+    label: 'Mental',
+    rowStart: 1,
+    rowEnd: 3,
+    colStart: 3,
+    colEnd: 5,
+  },
+  {
+    id: 'physical',
+    label: 'Physical',
+    rowStart: 3,
+    rowEnd: 5,
+    colStart: 2,
+    colEnd: 4,
+  },
+];
 
 export const getRiskColor = (score: number): string => {
   if (score >= 70) return 'var(--risk-low)';

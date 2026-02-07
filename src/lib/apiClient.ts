@@ -64,25 +64,25 @@ class ApiClient {
     );
   }
 
-  async createCheckIn(checkIn: CheckIn): Promise<CheckInRecord> {
-    if (this.useMock) {
-      await mockDelay(500);
-      const newCheckIn: CheckInRecord = {
-        id: `ci-${Date.now()}`,
-        date: checkIn.date || new Date().toISOString().split('T')[0],
-        ...checkIn,
-      };
-      mockCheckIns.unshift(newCheckIn);
-      return newCheckIn;
+  async createCheckIn(checkIn: CheckIn): Promise<any> {
+    // Always use the real backend endpoint for check-ins
+    const response = await fetch('/api/checkins', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(checkIn),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create check-in: ${response.status}`);
     }
-    return this.fetchWithValidation<CheckInRecord>(
-      '/checkins',
-      CheckInRecordSchema,
-      {
-        method: 'POST',
-        body: JSON.stringify(checkIn),
-      }
-    );
+
+    const data = await response.json();
+    return {
+      checkIn: CheckInRecordSchema.parse(data.checkIn),
+      analysis: data.analysis,
+    };
   }
 
   async getTransactionsSummary(): Promise<TransactionsSummary> {
@@ -119,6 +119,23 @@ class ApiClient {
     }
     const data = await response.json();
     return data.map((item: any) => CheckInRecordSchema.parse(item));
+  }
+
+  async analyzeSpending(): Promise<any> {
+    const response = await fetch('/api/analyze/spending', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || `Failed to analyze spending: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
   }
 }
 

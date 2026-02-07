@@ -3,6 +3,9 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { AppShell } from '@/components/AppShell';
+import { FinanceProvider } from '@/store/financeContext';
+import { FitnessAnalyticsProvider } from '@/store/fitnessContext';
+import { FileRegistryProvider } from '@/store/fileRegistry';
 
 export default function Providers({
   children,
@@ -11,7 +14,13 @@ export default function Providers({
 }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppShell>{children}</AppShell>
+      <FileRegistryProvider>
+        <FinanceProvider>
+          <FitnessAnalyticsProvider>
+            <AppShell>{children}</AppShell>
+          </FitnessAnalyticsProvider>
+        </FinanceProvider>
+      </FileRegistryProvider>
     </QueryClientProvider>
   );
 }

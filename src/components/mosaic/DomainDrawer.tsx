@@ -1,12 +1,15 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Upload, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Domain } from '@/types/schemas';
 import { DOMAIN_CONFIG } from '@/lib/domainConfig';
 import { Button } from '@/components/ui/Button';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { useDashboard } from '@/hooks/useDashboard';
+import { useSpendingAnalysis } from '@/hooks/useSpendingAnalysis';
+import { SpendingAnalysisDisplay } from '@/components/mosaic/SpendingAnalysisDisplay';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DomainDrawerProps {
@@ -17,12 +20,55 @@ interface DomainDrawerProps {
 
 export const DomainDrawer = ({ domain, isOpen, onClose }: DomainDrawerProps) => {
   const { data } = useDashboard();
+  const { refetch } = useSpendingAnalysis();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   
   if (!domain) return null;
 
   const config = DOMAIN_CONFIG[domain];
   const Icon = config.icon;
   const domainData = data?.domains.find(d => d.domain === domain);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUploadClick = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('domain', domain);
+
+      const response = await fetch('/api/upload/csv', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      setUploadSuccess(true);
+      setSelectedFile(null);
+      // Refetch analysis after successful upload
+      await refetch();
+      setTimeout(() => setUploadSuccess(false), 3000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload JSON file');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // Mock chart data
   const chartData = [
@@ -72,6 +118,89 @@ export const DomainDrawer = ({ domain, isOpen, onClose }: DomainDrawerProps) => 
                   <X size={20} />
                 </Button>
               </div>
+
+              {/* CSV Upload Section - Finance Domain Only */}
+              {domain === 'finance' && (
+                <>
+                  <GlassCard className="p-6 border border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-3">
+                        <Upload size={20} className="text-amber-600" />
+                        <h3 className="font-semibold text-text">Upload Transaction Data</h3>
+                      </div>
+                      <p className="text-sm text-muted">
+                        Upload a JSON file with your transaction details. We'll analyze spending patterns and provide insights.
+                      </p>
+                      
+                      {/* Hidden file input */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".json"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+
+                      {/* File selection button */}
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="flex items-center justify-center gap-3 w-full px-6 py-4 border-2 border-dashed border-amber-500/30 rounded-xl hover:border-amber-500/50 hover:bg-amber-500/5 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Upload size={18} className="text-amber-600" />
+                        <span className="text-sm font-medium text-text">
+                          {selectedFile ? selectedFile.name : 'Choose a JSON file'}
+                        </span>
+                      </button>
+
+                      {/* Selected file info and upload button */}
+                      {selectedFile && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20"
+                        >
+                          <div>
+                            <p className="text-xs text-muted mb-1">Selected file:</p>
+                            <p className="text-sm font-medium text-text truncate">{selectedFile.name}</p>
+                            <p className="text-xs text-muted">
+                              {(selectedFile.size / 1024).toFixed(2)} KB
+                            </p>
+                          </div>
+                          <Button
+                            onClick={handleUploadClick}
+                            disabled={isUploading}
+                            className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                            size="sm"
+                          >
+                            {isUploading ? 'Uploading...' : 'Upload File'}
+                          </Button>
+                        </motion.div>
+                      )}
+
+                      {uploadSuccess && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 border border-green-500/20"
+                        >
+                          <CheckCircle2 size={18} className="text-green-600" />
+                          <span className="text-sm text-green-700">File uploaded successfully!</span>
+                        </motion.div>
+                      )}
+                    </div>
+                  </GlassCard>
+
+                  {/* Spending Analysis - Finance Domain */}
+                  <div className="pt-4">
+                    <h3 className="text-lg font-semibold text-text mb-4 flex items-center gap-2">
+                      <RefreshCw size={18} />
+                      Spending Analysis
+                    </h3>
+                    <SpendingAnalysisDisplay />
+                  </div>
+                </>
+              )}
 
               {/* Score Overview */}
               {domainData && (

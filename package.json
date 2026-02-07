@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@react-three/drei": "^9.88.17",
     "@react-three/fiber": "^8.15.11",
     "@tanstack/react-query": "^5.12.2",
@@ -19,7 +20,8 @@
     "react-dom": "^18.2.0",
     "recharts": "^2.10.3",
     "three": "^0.159.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@types/node": "^20",
