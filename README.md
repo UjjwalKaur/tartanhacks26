@@ -1,4 +1,4 @@
-# Root'd
+# Rootd
 Connecting life signals (sleep, stress, activity, routines) to spending behavior to improve financial and overall wellbeing.
 
 ## Why this exists
