@@ -14,7 +14,7 @@ In real life, spending often spikes after:
 
 The problem is that these triggers are usually invisible in financial dashboards. When you only see a list of transactions, you miss the underlying patterns that drive behavior, and you repeat them.
 
-Root'd is built to solve that gap by turning scattered life data into a coherent “mosaic” that helps a user understand:
+Rootd is built to solve that gap by turning scattered life data into a coherent “mosaic” that helps a user understand:
 - what’s happening in their life
 - how it correlates with spending changes (especially wants spending)
 - what small, actionable experiments might reduce overspending while improving wellbeing
@@ -37,7 +37,7 @@ Most people already have the data needed to answer these questions, but it lives
 - wearable data (health)
 - mood or journaling signals (mental wellbeing)
 
-Root'd links them.
+Rootd links them.
 
 ---
 
