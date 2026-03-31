@@ -1,4 +1,4 @@
-# Root'd
+# Rooted
 Connecting life signals (sleep, stress, activity, routines) to spending behavior to improve financial and overall wellbeing.
 
 ## Why this exists
@@ -193,7 +193,7 @@ This makes Dedalus more reliable and testable:
 ---
 
 ## Vision
-Root'd is building toward a world where personal finance is not separate from life.
+Rooted is building toward a world where personal finance is not separate from life.
 
 Instead of optimizing only dollars, we optimize:
 - stability
@@ -208,4 +208,4 @@ If we can help people understand the causes of overspending, we can help them pr
 ---
 
 ## Disclaimer
-Root'd provides informational insights and behavior suggestions. It does not provide medical advice and should not be used as a diagnostic tool.
+Rooted provides informational insights and behavior suggestions. It does not provide medical advice and should not be used as a diagnostic tool.
